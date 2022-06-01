@@ -1,0 +1,260 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+.pm__default_templates {
+    margin-bottom: 20px;
+}
+
+.pm__template_content,
+.shortcode_contents {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+#pm_shortcodes>.shortcode_contents input {
+    width: 100%;
+}
+
+.pm__template_content .pm_remove_template,
+#pm_shortcodes>.shortcode_contents>.pm_remove_shortcode {
+    position: absolute;
+    top: -18px;
+    right: -32px;
+    display: inline-block;
+    color: red;
+    font-size: 36px;
+    transform: rotate(45deg);
+    cursor: pointer;
+    user-select: none;
+}
+
+#pm_shortcodes>.shortcode_contents>.pm_remove_shortcode {
+    top: -15px !important;
+}
+
+#create_new_post {
+    background-color: #3bbab3;
+    border-color: #3bbab3;
+}
+
+#create_new_post:focus {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 3px #3bbab3;
+}
+
+#loaderspin,
+div#pm_success_alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+    z-index: 999999;
+    background: #0000002e;
+}
+
+div#pm_success_alert .pm_alert_content {
+    width: 25%;
+    padding: 30px;
+    border-radius: 5px;
+    background: #fff;
+    animation-duration: 1s;
+    animation-name: alertBouncing;
+    -o-animation-name: alertBouncing;
+    -moz-animation-name: alertBouncing;
+    -moz-animation-name: alertBouncing;
+}
+
+@keyframes alertBouncing {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-30px);
+    }
+
+    60% {
+        transform: translateY(-15px);
+    }
+}
+
+.pm_alert_content {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.pm_close_alert {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    font-size: 26px;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    color: red;
+    user-select: none;
+    cursor: pointer;
+}
+
+.pm_buttons {
+    display: flex;
+    margin-top: 18px;
+    justify-content: space-between;
+}
+
+.pm_buttons button {
+    flex: .4;
+}
+
+input#preview_pm_link,
+input#preview_pm_link:focus {
+    background: transparent;
+    border: 1px solid #ddd;
+    box-shadow: none;
+}
+
+.pm_copy {
+    position: relative;
+    display: inline-block;
+}
+
+.pm_copy .pm_tooltiptext {
+    visibility: hidden;
+    width: 140px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 150%;
+    left: 50%;
+    margin-left: -75px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.pm_copy .pm_tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.pm_copy:hover .pm_tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+input#preview_pm_link::selection {
+    background: #2271b11a !important;
+}
+
+input#preview_pm_link::-moz-selection {
+    background: #2271b11a !important;
+}
+
+
+.pm_settings__tab {
+    overflow: hidden;
+    background-color: #f1f1f1;
+}
+a.pm_tablinks {
+    color: #2271b1;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+}
+.pm_settings__tab a {
+    background-color: #e6e6e6;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 14px;
+    transition: 0.3s;
+}
+.pm_settings__tab a:hover {
+    background-color: #ddd;
+}
+.pm_settings__tab a.active {
+    background-color: #2271b1;
+    color: #fff;
+}
+.pm_tabcontent {
+    display: none;
+    border-top: none;
+}
+.pm_tabcontent.active{
+    display: block;
+}
+.pm_tablinks.active{
+    background-color: #ddd; 
+}
+
+
+div#keywords ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    max-width: 50%;
+    margin-top: 30px;
+}
+div#keywords ul li {
+    padding: 5px;
+    border-bottom: 0.3px solid #b8d5ed;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+}
+div#keywords ul li:last-child{
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+a.pm_del {
+    background: red;
+    text-decoration: none;
+    display: inline-flex;
+    padding: 3px 5px;
+    border-radius: 3px;
+    color: #fff;
+}
+a.pm_del:hover{
+    color: #fff;
+}
+#keywords fieldset {
+    border: 1px solid #b2b2b2;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 3px;
+}
+#keywords fieldset legend{
+    width: 100%;
+}
+.actionbx {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
