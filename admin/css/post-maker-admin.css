@@ -111,14 +111,23 @@ div#pm_success_alert .pm_alert_content {
 
 .pm_buttons {
     display: flex;
-    margin-top: 18px;
+    margin-top: 0px;
     justify-content: space-between;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
 }
 
 .pm_buttons button {
     flex: .4;
+    cursor: pointer;
 }
 
+span.pm_result_length {
+    font-weight: 800;
+    display: block;
+    margin-bottom: 10px;
+}
 input#preview_pm_link,
 input#preview_pm_link:focus {
     background: transparent;
@@ -257,4 +266,12 @@ a.pm_del:hover{
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+.pm_alert_content .pm_data {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }

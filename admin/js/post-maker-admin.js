@@ -81,14 +81,14 @@ jQuery(document).ready(function ($) {
 	$(document).on("click", "#pm_add_shortcode", function(e){
 		e.preventDefault();
 		
-		let inputV = `<div class="shortcode_contents"><input data-id="${temp_id}" type="text" class="pmshortcode" placeholder="Keyword"><code>[pm-keyword-${temp_id}]</code><span class="pm_remove_shortcode">+</span></div>`;
+		let inputV = `<div class="shortcode_contents"><input data-id="${temp_id}" type="file" name="shortcodeFile[${temp_id}]" class="pmshortcode"><code>[pm-keyword-${temp_id}]</code><span class="pm_remove_shortcode">+</span></div>`;
 		
 		$(this).parents('td').find('#pm_shortcodes').append(inputV);
 		temp_id++;
 	});
 	// Remove shortcode
 	$(document).on('click', '.pm_remove_shortcode', function () {
-		if (confirm('This keyword will not be accessible for post creation!')) {
+		if (confirm('Uploaded file will not be accessible for post creation!')) {
 			$(this).parents('.shortcode_contents').remove();
 		}
 	});
@@ -96,43 +96,15 @@ jQuery(document).ready(function ($) {
 	$("#create_new_post").on("click", function(e){
 		e.preventDefault();
 		
-		let title = $("input[name='pm_post_title']").val();
-		let shortcodes = [];
-		$("#pm_shortcodes").find("input.pmshortcode").each(function(){
-			let data = {
-				id: $(this).data("id"),
-				content: $(this).val()
-			}
-			shortcodes.push(data);
-		});
-
-		let contents = [];
 		$(".pm__default_templates").find("textarea").each(function(){
 			let content = wp.editor.getContent( $(this).attr("id") );
-			contents.push(content)
+			$(this).val(content)
 		});
-
-		let thumbnail = $("#pm_default_thumbnail").val();
-		let tags = $("#pm_default_tags").val();
-		let categories = $("#pm_default_category").val();
-		let author = $("#pm_default_author").val();
-
-		let formData = {
-			title: title,
-			contents: contents,
-			thumbnail: thumbnail,
-			tags: tags,
-			categories: categories,
-			author: author,
-			shortcodes: shortcodes
-		}
 		
-		$.ajax({
-			type: "post",
+		$(this).parents("form").ajaxSubmit({
 			url: pm_ajax.ajaxurl,
 			data: {
-				action: "pm_create_post",
-				data: formData
+				action: "pm_create_post"
 			},
 			beforeSend: ()=>{
 				$("body").append(loader);
@@ -141,8 +113,12 @@ jQuery(document).ready(function ($) {
 			success: function (response) {
 				$(document).find("#loaderspin").remove();
 				if(response.success){
-					let alert = `<div id="pm_success_alert"> <div class="pm_alert_content"> <span class="pm_close_alert">+</span> <input type="url" id="preview_pm_link" value="${response.success}" readonly> <div class="pm_buttons"> <button id="pm_copy" class="button-primary pm_copy"><span class="pm_tooltiptext">Copy to clipboard</span> Copy Link</button> <a target="_blank" href="${response.success}" class="button-primary pm_open">Open Link</a> </div> </div> </div>`;
-					$("body").append(alert);
+					let element = '';
+					$.each(response.success, function (ind, el) { 
+						element += `<input type="url" class="preview_pm_link" value="${el}" readonly> <div class="pm_buttons"> <button class="pm_copy" class="button-primary pm_copy"><span class="pm_tooltiptext">Copy to clipboard</span> Copy Link</button> <a target="_blank" href="${el}" class="button-primary pm_open">Open Link</a> </div>`;
+					});
+
+					$("body").append(`<div id="pm_success_alert"> <div class="pm_alert_content"> <span class="pm_result_length">${response.success.length} posts created.</span> <span class="pm_close_alert">+</span> <div class="pm_data">${element}</div>  </div> </div>`);
 				}
 			}
 		});
@@ -158,13 +134,20 @@ jQuery(document).ready(function ($) {
 		}
 	});
 
-	$(document).on("click", "#pm_copy", function(){
-		var copyText = document.getElementById("preview_pm_link");
-		copyText.select();
-		copyText.setSelectionRange(0, 99999);
-		navigator.clipboard.writeText(copyText.value);
+	function copyToClipboard(text) {
+		var sampleTextarea = document.createElement("textarea");
+		document.body.appendChild(sampleTextarea);
+		sampleTextarea.value = text; //save main text in it
+		sampleTextarea.select(); //select textarea contenrs
+		document.execCommand("copy");
+		document.body.removeChild(sampleTextarea);
+	}
+
+	$(document).on("click", ".pm_copy", function(){
+		var copyText = $(this).parent().prev('input')
+		copyToClipboard(copyText.val())
 		
-		var tooltip = document.querySelector(".pm_tooltiptext");
+		var tooltip = $(this).children(".pm_tooltiptext");
 		tooltip.innerHTML = "Copied";
 		setTimeout(() => {
 			tooltip.innerHTML = "Copy to clipboard";

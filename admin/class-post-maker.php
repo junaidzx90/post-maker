@@ -70,7 +70,7 @@ class Post_Maker {
 		if ( defined( 'POST_MAKER_VERSION' ) ) {
 			$this->version = POST_MAKER_VERSION;
 		} else {
-			$this->version = '1.0.4';
+			$this->version = '1.0.6';
 		}
 		$this->plugin_name = 'post-maker';
 
@@ -97,8 +97,9 @@ class Post_Maker {
 			
             wp_enqueue_media();
 			wp_enqueue_editor();
+			wp_enqueue_script( 'jquery.form', plugin_dir_url( __FILE__ ).'js/jquery.form.min.js', array(), POST_MAKER_VERSION, false );
 			wp_enqueue_script( 'pm_selectize', plugin_dir_url( __FILE__ ).'js/selectize.min.js', array(), POST_MAKER_VERSION, false );
-            wp_enqueue_script( 'post-maker', plugin_dir_url( __FILE__ ).'js/post-maker-admin.js', array('jquery', 'pm_selectize'), POST_MAKER_VERSION, true );
+            wp_enqueue_script( 'post-maker', plugin_dir_url( __FILE__ ).'js/post-maker-admin.js', array('jquery', 'pm_selectize', 'jquery.form'), POST_MAKER_VERSION, true );
 			wp_localize_script( 'post-maker', 'pm_ajax', array(
 				'ajaxurl' => admin_url("admin-ajax.php")
 			) );
@@ -174,7 +175,7 @@ class Post_Maker {
 		echo '<div id="pm_shortcodes">';
 
 		echo '<div class="shortcode_contents">';
-		echo '<input data-id="1" class="pmshortcode" type="text" placeholder="Keyword">';
+		echo '<input data-id="1" class="pmshortcode" name="shortcodeFile[1]" type="file">';
 		echo '<code>[pm-keyword-1]</code>';
 		echo '</div>';
 		
@@ -249,65 +250,138 @@ class Post_Maker {
     
     function pm_create_post(){
 		global $wpdb;
-		if(isset($_POST['data'])){
-			$formData = $_POST['data'];
-			$title = sanitize_text_field( $formData['title'] );
-			$contents = $formData['contents'];
-			$thumbnail = intval($formData['thumbnail']);
-			$tags = $formData['tags'];
-			$categories = $formData['categories'];
-			$author = intval($formData['author']);
-			$shortcodes = $formData['shortcodes'];
+		
+		$files = [];
+		if(isset($_FILES['shortcodeFile'])){
+			if(is_array($_FILES['shortcodeFile'])){
+				$file = $_FILES['shortcodeFile'];
 
+				if(array_key_exists("name", $file)){
+					foreach($file['name'] as $key => $name){
+						$files[$key]['name'] = $name;
+					}
+				}
+				if(array_key_exists("type", $file)){
+					foreach($file['type'] as $key => $type){
+						$files[$key]['type'] = $type;
+					}
+				}
+				if(array_key_exists("tmp_name", $file)){
+					foreach($file['tmp_name'] as $key => $tmp_name){
+						$files[$key]['tmp_name'] = $tmp_name;
+					}
+				}
+			}
+		}
+
+		$dataArr = [];
+		if(sizeof($files)>0){
+			foreach($files as $key => $file){
+				$keywords = [];
+
+				$fileName = $file['name'];
+				$file_data = $file['tmp_name'];
+				
+				$open = fopen($file_data, "r");
+				while (($data = fgetcsv($open, 1000, ",")) !== FALSE){
+					$keywords[] = [
+						'shortcode' => $key,
+						'keyword' => iconv("CP1251", "UTF-8", $data[0])
+					];
+				}
+
+				$dataArr[] = $keywords;
+				fclose($open);
+			}
+		}
+
+		$finalData = [];
+		foreach($dataArr as $darr){
+			foreach($darr as $k => $rr){
+				$finalData[$k][] = $rr;
+			}
+		}
+
+		$contents = [];
+		if(isset($_POST['pm_post_contents'])){
+			$contents = $_POST['pm_post_contents'];
+		}
+
+		$title = '';
+		if(isset($_POST['pm_post_title'])){
+			$title = $_POST['pm_post_title'];
+		}
+
+		$thumbnail = null;
+		if(isset($_POST['pm_default_thumbnail'])){
+			$thumbnail = intval( $_POST['pm_default_thumbnail'] );
+		}
+
+		$tags = [];
+		if(isset($_POST['pm_default_tags'])){
+			$tags = $_POST['pm_default_tags'];
+		}
+
+		$categories = [];
+		if(isset($_POST['pm_default_category'])){
+			$categories = $_POST['pm_default_category'];
+		}
+
+		$author = null;
+		if(isset($_POST['pm_default_author'])){
+			$author = intval($_POST['pm_default_author']);
+		}
+
+		$created_urls = [];
+		foreach($finalData as $key => $post){
 			// Content ready with shortcode
 			$final_contents = '';
-            if(is_array($contents) && sizeof($contents) > 0){ // Random select template
-                shuffle($contents);
-                $contentIndex = array_rand($contents, 1);
-                $final_contents = $contents[$contentIndex];
-            }
+			if(is_array($contents) && sizeof($contents) > 0){ // Random select template
+				shuffle($contents);
+				$contentIndex = array_rand($contents, 1);
+				$final_contents = $contents[$contentIndex];
+			}
 
 			$shortcodecontents = [];
 			$checktitle = false;
-			if(is_array($shortcodes) && sizeof($shortcodes) > 0){
-				foreach($shortcodes as $shortcode){
-					if(preg_match_all("[pm-keyword-".$shortcode['id']."]", $final_contents, $matched)){
+			$fcontents = $final_contents;
+			$contentTitle = $title;
+
+			foreach($post as $p){
+				$shc = $p['shortcode'];
+				$keyword = $p['keyword'];
+
+				if(preg_match_all("[pm-keyword-".$shc."]", $fcontents, $matched)){
+					if(sizeof($matched) > 0){
+						$shortcodecontents[] = [
+							'shortcode_id' => $shc,
+							'text' => stripslashes( $keyword )
+						];
+					}else{
+						$checktitle = true;
+					}
+				}
+
+				if($checktitle){
+					if(preg_match_all("[pm-keyword-".$shc."]", $title, $matched)){
 						if(sizeof($matched) > 0){
 							$shortcodecontents[] = [
-								'shortcode_id' => $shortcode['id'],
-								'text' => stripcslashes( $shortcode['content'] )
+								'shortcode_id' => $shc,
+								'text' => stripslashes( $keyword )
 							];
-						}else{
-							$checktitle = true;
 						}
 					}
-
-					$final_contents = str_replace("[pm-keyword-".$shortcode['id']."]", stripcslashes( $shortcode['content'] ), $final_contents);
-					$final_contents = stripcslashes( $final_contents );
 				}
+				
+				$fcontents = str_replace("[pm-keyword-".$shc."]", stripslashes( $keyword ), $fcontents);
+				$fcontents = stripslashes( $fcontents );
+				$contentTitle = str_replace("[pm-keyword-".$shc."]", stripslashes( $keyword ), $contentTitle);
 			}
 
-			// Title ready with shortcode
-			if(is_array($shortcodes) && sizeof($shortcodes) > 0){
-				foreach($shortcodes as $shortcode){
-					if($checktitle){
-						if(preg_match_all("[pm-keyword-".$shortcode['id']."]", $title, $matched)){
-							if(sizeof($matched) > 0){
-								$shortcodecontents[] = [
-									'shortcode_id' => $shortcode['id'],
-									'text' => stripcslashes( $shortcode['content'] )
-								];
-							}
-						}
-					}
-					$title = str_replace("[pm-keyword-".$shortcode['id']."]", stripcslashes( $shortcode['content'] ), $title);
-				}
-			}
-
-			// Create post object
+			// Post will create from here
             $args = array(
-                'post_title'    => wp_strip_all_tags( $title ),
-                'post_content'  => $final_contents,
+                'post_title'    => wp_strip_all_tags( $contentTitle ),
+                'post_content'  => $fcontents,
                 'post_status'   => 'publish',
                 'post_author'   => (($author) ? $author : 1)
             );
@@ -338,12 +412,11 @@ class Post_Maker {
 					wp_set_post_tags( $post_id, $tags );
 				}
 
-				echo json_encode(array("success" => get_the_permalink( $post_id )));
-				die;
+				$created_urls[] = get_the_permalink( $post_id );
 			}
 		}
 
-		echo json_encode(array("error" => "Error"));
+		echo json_encode(array("success" => $created_urls));
 		die;
     }
 
