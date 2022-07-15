@@ -378,10 +378,11 @@ class Post_Maker {
 				$contentTitle = str_replace("[pm-keyword-".$shc."]", stripslashes( $keyword ), $contentTitle);
 			}
 
-			$posttitle = wp_strip_all_tags( $contentTitle );
-			$lowerTitle = strtolower($posttitle);
+			$posttitle = stripslashes(sanitize_text_field( $contentTitle ));
+			$lowerTitle = strtolower(stripslashes(sanitize_text_field( $posttitle )));
+			$lowerTitle = str_replace('"', "'", $lowerTitle);
 			$pstatus = 'publish';
-			if($wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE LOWER(post_title) LIKE '%$lowerTitle%'")){
+			if($wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE LOWER(post_title) LIKE \"%$lowerTitle%\" AND post_status = 'publish'")){
 				$pstatus = 'draft';
 			}
 
