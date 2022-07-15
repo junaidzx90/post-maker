@@ -70,7 +70,7 @@ class Post_Maker {
 		if ( defined( 'POST_MAKER_VERSION' ) ) {
 			$this->version = POST_MAKER_VERSION;
 		} else {
-			$this->version = '1.0.6';
+			$this->version = '1.0.7';
 		}
 		$this->plugin_name = 'post-maker';
 
@@ -378,11 +378,18 @@ class Post_Maker {
 				$contentTitle = str_replace("[pm-keyword-".$shc."]", stripslashes( $keyword ), $contentTitle);
 			}
 
+			$posttitle = wp_strip_all_tags( $contentTitle );
+			$lowerTitle = strtolower($posttitle);
+			$pstatus = 'publish';
+			if($wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE LOWER(post_title) LIKE '%$lowerTitle%'")){
+				$pstatus = 'draft';
+			}
+
 			// Post will create from here
             $args = array(
-                'post_title'    => wp_strip_all_tags( $contentTitle ),
+                'post_title'    => $posttitle,
                 'post_content'  => $fcontents,
-                'post_status'   => 'publish',
+                'post_status'   => $pstatus,
                 'post_author'   => (($author) ? $author : 1)
             );
 
