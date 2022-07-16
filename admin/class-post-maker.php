@@ -107,7 +107,7 @@ class Post_Maker {
     }
 
 	function admin_menu_page(){
-		add_submenu_page( "edit.php", "Post maker", "Post maker", "manage_options", "post-maker", [$this, "setting_page"], null );
+		add_menu_page( "Post maker", "Post maker", "manage_options", "post-maker", [$this, "setting_page"], "dashicons-image-rotate", 5 );
         add_settings_section( 'pm_general_opt_section', '', '', 'pm_general_opt_page' );
             
         // Post title
@@ -379,10 +379,9 @@ class Post_Maker {
 			}
 
 			$posttitle = stripslashes(sanitize_text_field( $contentTitle ));
-			$lowerTitle = strtolower(stripslashes(sanitize_text_field( $posttitle )));
-			$lowerTitle = str_replace('"', "'", $lowerTitle);
+			$posttitle = str_replace('"', "'", $posttitle);
 			$pstatus = 'publish';
-			if($wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE LOWER(post_title) LIKE \"%$lowerTitle%\" AND post_status = 'publish'")){
+			if($wpdb->get_var("SELECT ID FROM {$wpdb->prefix}posts WHERE post_title = \"$posttitle\" AND post_status = 'publish' AND post_type = 'post'")){
 				$pstatus = 'draft';
 			}
 
